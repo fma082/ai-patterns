@@ -1,26 +1,353 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+/* ============================================================================
+   AI Interface Patterns — Sistema de tokens (monocromo, light + dark)
+   Fuente de verdad: docs/tokens-spec.md
+   Arquitectura de 2 capas:
+     1) Primitives  -> valores crudos, constantes, no cambian por modo.
+     2) Semantic    -> aliasan a Primitives; se redefinen en :root (light) y .dark.
+   Las utilidades de Tailwind (@theme inline) apuntan SIEMPRE a Semantic.
+   Nunca hardcodear un hex en un componente: todo sale de estos tokens.
+
+   Mapa código <-> Figma (mismos VALORES; el nombre de la CSS var = path Figma):
+     surface/*      -> bg-surface-*        (ej. bg-surface-page)
+     text/*         -> text-ink-*          (ej. text-ink-primary)
+     interactive/*  -> bg-action-* / text-action-*   (ej. bg-action-primary)
+     border/*       -> border-edge-*       (ej. border-edge-default)
+   Los tokens de shadcn (--background, --card, --primary, --border, ...) se
+   re-cablean a estos primitivos para que sus componentes hereden el monocromo.
+   ========================================================================== */
+
+/* dark por clase .dark en <html> (Tailwind v4 no lo trae por defecto) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ----------------------------------------------------------------------------
+   CAPA 1 — PRIMITIVES (constantes; no cambian entre light y dark)
+   -------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neutral (rampa cálida) */
+  --neutral-0: #ffffff;
+  --neutral-25: #fbfaf9;
+  --neutral-50: #f6f5f2;
+  --neutral-100: #eeede9;
+  --neutral-200: #e2e0db;
+  --neutral-300: #d1cfc9;
+  --neutral-400: #adaba3;
+  --neutral-500: #86847c;
+  --neutral-600: #66645c;
+  --neutral-700: #4a4842;
+  --neutral-800: #302f2b;
+  --neutral-900: #1c1b18;
+  --neutral-950: #121110;
+  --neutral-975: #0c0c0b;
+  --neutral-1000: #000000;
+
+  /* Red (estado — error, desaturado) */
+  --red-50: #fbebe9;
+  --red-300: #eda79e;
+  --red-400: #e0736a;
+  --red-600: #c0483e;
+  --red-800: #57201b;
+  --red-950: #2a0f0c;
+
+  /* Green (estado — success, desaturado) */
+  --green-400: #5da383;
+  --green-600: #3c7a5b;
+  --green-800: #21422f;
 }
 
+/* ----------------------------------------------------------------------------
+   CAPA 2 — SEMANTIC · LIGHT (modo hero)
+   Cada valor es un alias a un primitivo, nunca un hex.
+   -------------------------------------------------------------------------- */
+:root {
+  /* Surface */
+  --surface-page: var(--neutral-50);
+  --surface-panel: var(--neutral-0);
+  --surface-message-user: var(--neutral-100);
+  --surface-message-ai: var(--neutral-0);
+  --surface-input: var(--neutral-50);
+  --surface-chip: var(--neutral-100);
+  --surface-chip-hover: var(--neutral-200);
+  --surface-loading: var(--neutral-100);
+  --surface-selected: var(--neutral-200); /* un paso más oscuro que chip (100) */
+  --surface-error: var(--red-50);
+
+  /* Text */
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-400);
+  --text-placeholder: var(--neutral-400);
+  --text-suggestion: var(--neutral-600);
+  --text-recent: var(--neutral-500);
+  --text-loading-hint: var(--neutral-500);
+  --text-step-active: var(--neutral-900);
+  --text-step-complete: var(--neutral-500);
+  --text-error: var(--red-600);
+  --text-success: var(--green-600);
+  --text-on-action: var(--neutral-0);
+
+  /* Interactive (acción = negro suave en light) */
+  --interactive-primary: var(--neutral-900);
+  --interactive-primary-hover: var(--neutral-1000);
+  --interactive-disabled: var(--neutral-200);
+  --accent-shimmer: var(--neutral-200);
+
+  /* Border */
+  --border-subtle: var(--neutral-100);
+  --border-default: var(--neutral-200);
+  --border-input: var(--neutral-200);
+  --border-input-focus: var(--neutral-900);
+  --border-error: var(--red-300);
+
+  /* --- Compat shadcn (re-cableado a primitivos monocromo) --- */
+  --background: var(--surface-page);
+  --foreground: var(--text-primary);
+  --card: var(--surface-panel);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-panel);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--interactive-primary);
+  --primary-foreground: var(--text-on-action);
+  --secondary: var(--surface-chip);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-loading);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--surface-selected);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--red-600);
+  --destructive-foreground: var(--neutral-0);
+  --border: var(--border-default);
+  --input: var(--border-input);
+  --ring: var(--border-input-focus);
+  --radius: 16px;
+}
+
+/* ----------------------------------------------------------------------------
+   CAPA 2 — SEMANTIC · DARK
+   Mismos tokens, apuntando a los primitivos del extremo oscuro.
+   -------------------------------------------------------------------------- */
+.dark {
+  /* Surface */
+  --surface-page: var(--neutral-975);
+  --surface-panel: var(--neutral-900);
+  --surface-message-user: var(--neutral-800);
+  --surface-message-ai: var(--neutral-900);
+  --surface-input: var(--neutral-800);
+  --surface-chip: var(--neutral-800);
+  --surface-chip-hover: var(--neutral-700);
+  --surface-loading: var(--neutral-800);
+  --surface-selected: var(--neutral-700); /* un paso más claro que chip (800): resalta en dark */
+  --surface-error: var(--red-950);
+
+  /* Text */
+  --text-primary: var(--neutral-50);
+  --text-secondary: var(--neutral-400);
+  --text-tertiary: var(--neutral-600);
+  --text-placeholder: var(--neutral-600);
+  --text-suggestion: var(--neutral-400);
+  --text-recent: var(--neutral-500);
+  --text-loading-hint: var(--neutral-500);
+  --text-step-active: var(--neutral-50);
+  --text-step-complete: var(--neutral-500);
+  --text-error: var(--red-400);
+  --text-success: var(--green-400);
+  --text-on-action: var(--neutral-900);
+
+  /* Interactive (acción = blanco en dark) */
+  --interactive-primary: var(--neutral-0);
+  --interactive-primary-hover: var(--neutral-200);
+  --interactive-disabled: var(--neutral-800);
+  --accent-shimmer: var(--neutral-700);
+
+  /* Border */
+  --border-subtle: var(--neutral-800);
+  --border-default: var(--neutral-700);
+  --border-input: var(--neutral-700);
+  --border-input-focus: var(--neutral-0);
+  --border-error: var(--red-800);
+
+  /* --- Compat shadcn --- */
+  --destructive: var(--red-400);
+  --destructive-foreground: var(--neutral-900);
+  /* el resto (background, card, primary, border, ...) se hereda de los
+     semánticos de arriba porque aliasan a los mismos tokens surface/text/etc. */
+}
+
+/* ----------------------------------------------------------------------------
+   @theme inline — expone los Semantic como utilidades de Tailwind.
+   `inline` = las utilidades referencian var(--...) en runtime, así el toggle
+   .dark invierte todo sin recompilar.
+   -------------------------------------------------------------------------- */
 @theme inline {
+  --font-sans: var(--font-inter);
+
+  /* Surface -> bg-surface-* */
+  --color-surface-page: var(--surface-page);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-message-user: var(--surface-message-user);
+  --color-surface-message-ai: var(--surface-message-ai);
+  --color-surface-input: var(--surface-input);
+  --color-surface-chip: var(--surface-chip);
+  --color-surface-chip-hover: var(--surface-chip-hover);
+  --color-surface-loading: var(--surface-loading);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-error: var(--surface-error);
+
+  /* Text -> text-ink-* */
+  --color-ink-primary: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-ink-placeholder: var(--text-placeholder);
+  --color-ink-suggestion: var(--text-suggestion);
+  --color-ink-recent: var(--text-recent);
+  --color-ink-loading-hint: var(--text-loading-hint);
+  --color-ink-step-active: var(--text-step-active);
+  --color-ink-step-complete: var(--text-step-complete);
+  --color-ink-error: var(--text-error);
+  --color-ink-success: var(--text-success);
+  --color-ink-on-action: var(--text-on-action);
+
+  /* Interactive -> bg-action-* / text-action-* */
+  --color-action-primary: var(--interactive-primary);
+  --color-action-primary-hover: var(--interactive-primary-hover);
+  --color-action-disabled: var(--interactive-disabled);
+  --color-shimmer: var(--accent-shimmer);
+
+  /* Border -> border-edge-* */
+  --color-edge-subtle: var(--border-subtle);
+  --color-edge-default: var(--border-default);
+  --color-edge-input: var(--border-input);
+  --color-edge-input-focus: var(--border-input-focus);
+  --color-edge-error: var(--border-error);
+
+  /* Compat shadcn */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ----------------------------------------------------------------------------
+   Constantes de forma y tipografía (no dependen del modo)
+   -------------------------------------------------------------------------- */
+@theme {
+  /* Radius (spec: xs4 sm8 md12 lg16 xl24 pill999) */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Tipografía (size / line-height / weight) */
+  --text-heading-sm: 14px;
+  --text-heading-sm--line-height: 1.3;
+  --text-heading-sm--font-weight: 500;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 1.6;
+  --text-body-lg--font-weight: 400;
+
+  --text-body-md: 14px;
+  --text-body-md--line-height: 1.6;
+  --text-body-md--font-weight: 400;
+
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--font-weight: 400;
+
+  --text-caption-md: 12px;
+  --text-caption-md--line-height: 1.4;
+  --text-caption-md--font-weight: 400;
+
+  --text-caption-sm: 11px;
+  --text-caption-sm--line-height: 1.4;
+  --text-caption-sm--font-weight: 500;
+}
+
+/* Nota: spacing base-4 ya coincide con la escala default de Tailwind
+   (--spacing = 4px), así que space/1..10 == p-1..p-10 sin tokens extra. */
+
+/* ----------------------------------------------------------------------------
+   Animaciones (spec: dot-bounce 1400ms · shimmer 1500ms · fade-in 200ms)
+   -> utilidades animate-dot-bounce / animate-shimmer / animate-fade-in / animate-blink
+   -------------------------------------------------------------------------- */
+@theme {
+  --animate-dot-bounce: dot-bounce 1400ms infinite ease-in-out both;
+  --animate-shimmer: shimmer 1500ms infinite linear;
+  --animate-fade-in: fade-in 200ms ease-out both;
+  --animate-blink: blink 1000ms step-end infinite;
+}
+
+@keyframes dot-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-edge-default;
+  }
+  body {
+    @apply bg-surface-page text-ink-primary font-sans;
+  }
 }
